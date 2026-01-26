@@ -12,13 +12,13 @@
 
 Dự án này sinh ra từ nhu cầu cá nhân của một sinh viên Bách Khoa: Tôi cần một không gian làm việc tối giản, loại bỏ sự xao nhãng từ MXH/Short Videos, và tập trung tối đa vào mục tiêu **đi làm vào năm 3 Đại học**.
 
-Phiên bản mới nhất biến trình duyệt thành một "buồng lái" (cockpit) với thanh công cụ Sidebar hiện đại (phong cách Opera GX), lịch trình tích hợp và hình nền động tạo cảm hứng.
+Phiên bản mới nhất ("Reborn") biến trình duyệt thành một "buồng lái" (cockpit) với thanh Sidebar cố định, lịch trình tích hợp và hình nền động tạo cảm hứng.
 
 ## ✨ Features (Tính năng)
 
 * **⚡ Lightweight Core:** Viết bằng Vanilla JS (thuần), không dùng Framework. Tối ưu RAM tuyệt đối.
-* **🧭 Smart Sidebar:** Thanh công cụ cố định bên phải (Opera GX Style), giúp truy cập nhanh các tiện ích mà không làm rối màn hình chính.
-* **📅 Interactive Calendar:** Tích hợp Lịch popup ngay trên New Tab để quản lý ngày tháng.
+* **🧭 Smart Sidebar:** Thanh công cụ cố định bên phải (phong cách Opera GX), giúp truy cập nhanh Lịch, Báo thức, Settings mà không làm rối màn hình chính.
+* **📅 Interactive Calendar:** Tích hợp Lịch popup ngay trên New Tab để xem ngày tháng nhanh chóng.
 * **🎯 Goal Reminder:** Luôn hiển thị mục tiêu quan trọng nhất ngay giữa màn hình. Không bao giờ quên mình đang cày vì cái gì.
 * **🎬 Dynamic Background:**
     * Hỗ trợ hình nền tĩnh (JPG/PNG).
@@ -28,17 +28,15 @@ Phiên bản mới nhất biến trình duyệt thành một "buồng lái" (coc
 
 ## 🛠️ Tech Stack (Công nghệ)
 
-* **Frontend:** HTML5, CSS3 (Flexbox, Grid, Backdrop-filter, Animations).
+* **Frontend:** HTML5, CSS3 (Flexbox, Grid, Backdrop-filter).
 * **Logic:** JavaScript (ES6+).
 * **Storage:** Chrome LocalStorage API.
 
 ## 📸 Screenshots (Hình ảnh)
 
-*(Hãy upload ảnh chụp màn hình mới của ông vào thư mục dự án và cập nhật link ở đây)*
-
-| Main View (Sidebar Mode) | Calendar Popup |
+| Default View | Settings Modal |
 |:---:|:---:|
-| ![Main View](https://github.com/DUTVcore/Focus_tab/blob/main/screenshot_main.png?raw=true) | ![Calendar](https://github.com/DUTVcore/Focus_tab/blob/main/screenshot_calendar.png?raw=true) |
+| ![Main View](https://github.com/DUTVcore/NightTab/blob/main/Screenshot_df.png) | ![Settings](https://github.com/DUTVcore/NightTab/blob/main/Screenshot%202025-12-07%20082705.png) |
 
 ## 🚀 Installation (Cài đặt)
 
@@ -56,11 +54,11 @@ Hiện tại dự án đang ở dạng **Developer Preview**, bạn có thể c�
 
 ## 🗺️ Roadmap (Dự định)
 
-- [x] Giao diện Sidebar hiện đại.
-- [x] Tích hợp Lịch (Calendar View).
+- [x] Giao diện Sidebar hiện đại (Fixed Right).
+- [x] Tích hợp Calendar View (Popup).
 - [x] Tùy chỉnh hình nền (Ảnh/Video).
-- [ ] **Future Tasks:** Bấm vào ngày trên lịch để thêm task cho tương lai.
-- [ ] **Pomodoro Timer:** Tích hợp đồng hồ đếm ngược và báo thức.
+- [ ] **Future Tasks:** Tính năng thêm task cho ngày tương lai trên lịch.
+- [ ] **Pomodoro Timer:** Tích hợp đồng hồ đếm ngược.
 - [ ] **Block Site Mode:** Tự động chặn Facebook/TikTok trong giờ làm việc.
 
 ## 🤝 Contributing
