@@ -1,0 +1,19 @@
+# --- 1. Rác hệ điều hành (Windows/Mac sinh ra) ---
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# --- 2. Rác của VS Code (Cấu hình cá nhân không nên up lên) ---
+.vscode/
+*.code-workspace
+
+# --- 3. Rác C++ (File đã biên dịch ra file chạy .exe) ---
+*.exe
+*.o
+*.out
+*.app
+
+# --- 4. Rác Web/Javascript ---
+node_modules/
+.env
+npm-debug.log

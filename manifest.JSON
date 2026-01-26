@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "Focus Tab - Anti Distraction",
+  "version": "2.1",
+  "description": "Quản lý thời gian, nhiệm vụ và chặn xao nhãng.",
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "permissions": [
+    "storage",
+    "tabs",
+    "scripting"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "host_permissions": [
+    "<all_urls>"
+  ]
+}

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Focus Tab</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="bg-container"></div>
+
+    <img src="setting.png" id="setting-icon" alt="Settings" title="Cài đặt">
+
+    <div id="main-container" class="glass-effect">
+
+        <img src="button.png" id="drag-handle" alt="Move" title="Giữ chuột để kéo">
+
+        <div class="time-wrapper">
+            <h1 id="clock">00:00:00</h1>
+            <p id="date-display">Thứ ..., ngày ... tháng ... năm ...</p>
+        </div>
+
+        <h2 class="goal">MỤC TIÊU: ĐI LÀM NĂM 3!</h2>
+        
+        <div class="focus-mode-container">
+            <input type="text" id="focus-input" placeholder="Web cần tập trung (vd: leetcode.com)">
+            <button id="toggle-focus-btn">BẬT FOCUS</button>
+        </div>
+        
+        <div class="input-group">
+            <input type="text" id="taskInput" placeholder="Hôm nay làm gì? (Enter)">
+        </div>
+        
+        <h4 id="list-title" style="text-align: left; margin: 10px 0 5px 0; display:none;">Hôm nay:</h4>
+        <ul id="taskList"></ul>
+    </div>
+
+    <!-- <div id="calendar-popup" class="hidden glass-effect">
+        <div class="calendar-header">
+            <button id="prev-month">&lt;</button>
+            <h3 id="calendar-month-year">Tháng ...</h3>
+            <button id="next-month">&gt;</button>
+        </div>
+        <div class="calendar-days-label">
+            <span>CN</span><span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span>
+        </div>
+        <div id="calendar-grid">
+            </div>
+        <div class="calendar-footer">
+            <button id="close-calendar">Đóng</button>
+        </div>
+    </div> -->
+
+    <div id="settings-modal" class="hidden">
+        <div class="modal-content glass-effect">
+            <span id="close-modal">&times;</span>
+            
+            <div class="tabs-menu">
+                <button class="tab-btn active" data-target="tab-general">Chung</button>
+                <button class="tab-btn" data-target="tab-size">Kích cỡ</button>
+                <button class="tab-btn" data-target="tab-background">Hình nền</button>
+                <button class="tab-btn" data-target="tab-contact">Liên hệ</button>
+            </div>
+            <div id="tab-general" class="tab-content active">
+                <h3>Cấu hình "Cú Đêm"</h3>
+                <p style="font-size: 0.9rem; color: #a6adc8; margin-bottom: 10px;">
+                    Giờ reset nhiệm vụ (0-23h).
+                </p>
+                <div class="setting-item">
+                     <div style="display:flex; gap:10px; align-items: center;">
+                        <input type="number" id="reset-hour-input" min="0" max="23" value="0" style="width: 80px;">
+                        <button id="save-settings-btn">Lưu Giờ</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-size" class="tab-content hidden">
+                 <h3>Tùy chỉnh giao diện</h3>
+                <div class="setting-item">
+                    <label>Độ to (Zoom): <span id="zoom-val">1.0</span>x</label>
+                    <input type="range" id="zoom-range" min="0.5" max="1.5" step="0.1" value="1">
+                </div>
+                <div class="setting-item">
+                    <label>Font chữ:</label>
+                    <select id="font-select">
+                        <option value="'Segoe UI', sans-serif">Mặc định (Segoe UI)</option>
+                        <option value="'Courier New', monospace">Code (Courier New)</option>
+                        <option value="'Times New Roman', serif">Cổ điển (Times)</option>
+                        <option value="'Arial', sans-serif">Đơn giản (Arial)</option>
+                        <option value="cursive">Viết tay (Cursive)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="tab-background" class="tab-content hidden">
+                 <h3>Tùy chỉnh nền</h3>
+                <input type="text" id="bg-url-input" placeholder="Link ảnh hoặc video...">
+                <div style="margin-top: 15px; text-align: right;">
+                    <button id="save-bg-btn">Lưu Nền</button>
+                    <button id="reset-bg-btn" style="background: #f38ba8;">Mặc định</button>
+                </div>
+            </div>
+
+            <div id="tab-contact" class="tab-content hidden">
+                <h3>Contact Me</h3>
+                <div class="profile-card">
+                    <p><strong>About me:</strong> Hardware Enthusiast, Overclocking Addict.</p>
+                    <p>👨‍💻 Computer Engineering Student @2007 @ DUT</p>
+                    <blockquote style="border-left: 3px solid #fab387; padding-left: 10px; font-style: italic; color: #fab387; margin: 10px 0;">
+                        "Underwear can rip, but the PC must be maxed out!"
+                    </blockquote>
+                    <p>
+                        <a href="https://github.com/DUTVcore/Dm_Dung_Luoi_Nua" target="_blank" style="color: #89b4fa; text-decoration: none; font-weight: bold;">[Github]</a>
+                    </p>
+                    <div style="text-align: center; margin-top: 10px;">
+                        <img src="qr.jpg" alt="QR Code" class="qr-img">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar-tools">
+        <img src="recheck.png" id="recheck-btn" class="tool-icon" alt="Review" title="Xem lại nhiệm vụ hôm qua">
+        
+        <img src="lich.png" id="calendar-btn" class="tool-icon" alt="Calendar" title="Mở lịch trình">
+        
+        <img src="dho.png" id="alarm-btn" class="tool-icon" alt="Alarm" title="Hẹn giờ/Báo thức">
+    </div>
+
+    <script src="script.js"></script>
+    <div id="calendar-popup" class="hidden glass-effect">
+        <div class="calendar-header">
+            <button id="prev-month">&lt;</button>
+            <h3 id="calendar-month-year">Tháng ...</h3>
+            <button id="next-month">&gt;</button>
+        </div>
+        <div class="calendar-days-label">
+            <span>CN</span><span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span>
+        </div>
+        <div id="calendar-grid">
+            </div>
+        <div class="calendar-footer">
+            <button id="close-calendar">Đóng</button>
+        </div>
+    </div>
+</body>
+</html>

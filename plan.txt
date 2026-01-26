@@ -1,0 +1,5 @@
+MyFocusTab/
+├── manifest.json  (File cấu hình - Datasheet của extension)
+├── newtab.html    (Giao diện - Mạch in PCB)
+├── style.css      (Trang trí - Vỏ case)
+└── script.js      (Logic - Vi điều khiển)
