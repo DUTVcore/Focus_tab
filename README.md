@@ -44,7 +44,7 @@ The project is currently in **Developer Preview**. You can install it manually (
 
 1.  **Clone this repository to your machine:**
     ```bash
-    git clone [https://github.com/DUTVcore/Focus_tab.git](https://github.com/DUTVcore/Focus_tab.git)
+    git clone https://github.com/DUTVcore/Focus_tab.git
     ```
 2.  Open Chrome (or Edge/Brave), type into the address bar:
     `chrome://extensions/`
