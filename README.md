@@ -36,7 +36,7 @@ The latest version ("Reborn") transforms your browser into a true "cockpit" with
 
 | Default View | Settings Modal |
 |:---:|:---:|
-| ![Main View](https://github.com/DUTVcore/NightTab/blob/main/Screenshot_df.png) | ![Settings](https://github.com/DUTVcore/NightTab/blob/main/Screenshot%202025-12-07%20082705.png) |
+| ![Main View](https://github.com/DUTVcore/NightTab/blob/main/Screenshot_df.png) | ![Settings](https://github.com/DUTVcore/NightTab/blob/main/Gd2.png) |
 
 ## 🚀 Installation
 
