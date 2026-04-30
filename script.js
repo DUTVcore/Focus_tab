@@ -1,7 +1,7 @@
 /**
  * PROJECT: FOCUS TAB EXTENSION
  * Dev: DUTVcore
- * Updated: Future Tasks & LocalStorage DB Migration 
+ * Updated: Future Tasks & Pomodoro Timer
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -169,10 +169,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // 7. DATA MIGRATION & TASK STATE (QWEN INTEGRATED)
+    // 7. DATA MIGRATION & TASK STATE
     // ==========================================
-    
-    // Helper để lấy ngày dạng YYYY-MM-DD tránh lỗi múi giờ
     function getSafeDateString(dateObj) {
         const y = dateObj.getFullYear();
         const m = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -180,7 +178,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${y}-${m}-${d}`;
     }
 
-    // Tính toán ngày hiện tại (có tính offset Cú Đêm)
     function getLogicalDateStr() {
         const resetHour = parseInt(localStorage.getItem('userResetHour')) || 0;
         const now = new Date();
@@ -189,22 +186,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const todayLogicalDateStr = getLogicalDateStr();
-    let currentSelectedDateStr = todayLogicalDateStr; // Mặc định là hôm nay
+    let currentSelectedDateStr = todayLogicalDateStr;
     
-    // Load Database từ LocalStorage
     let tasksDB = JSON.parse(localStorage.getItem('tasksDB') || '{}');
 
-    // Migration logic: Chuyển dữ liệu cũ sang cấu trúc DB mới
     if (localStorage.getItem('myTasks')) {
         const oldTasks = JSON.parse(localStorage.getItem('myTasks'));
         if (oldTasks.length > 0) {
             tasksDB[todayLogicalDateStr] = oldTasks;
             localStorage.setItem('tasksDB', JSON.stringify(tasksDB));
         }
-        localStorage.removeItem('myTasks'); // Xóa mảng cũ
+        localStorage.removeItem('myTasks'); 
     }
 
-    // Render danh sách Task
     function renderCustomList(tasksArr, readOnly = false) {
         if (!taskList) return;
         taskList.innerHTML = "";
@@ -218,13 +212,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const li = document.createElement('li');
             li.textContent = task;
             if (!readOnly) {
-                // Sửa lỗi: Xóa task trên database mới
                 li.onclick = () => { 
                     tasksDB[currentSelectedDateStr].splice(index, 1);
                     localStorage.setItem('tasksDB', JSON.stringify(tasksDB));
                     renderCustomList(tasksDB[currentSelectedDateStr], false);
-                    
-                    // Render lại lịch nếu đang mở để cập nhật dấu chấm
                     let parts = currentSelectedDateStr.split('-');
                     renderCalendar(parseInt(parts[1]) - 1, parseInt(parts[0])); 
                 };
@@ -235,30 +226,24 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Khởi chạy render lần đầu cho ngày hôm nay
-    if (listTitle) listTitle.style.display = 'none'; // Ẩn chữ "Hôm nay:" lúc đầu
+    if (listTitle) listTitle.style.display = 'none'; 
     renderCustomList(tasksDB[currentSelectedDateStr] || [], false);
 
     // ==========================================
-    // 8. NHẬP TASK MỚI (QWEN INTEGRATED)
+    // 8. NHẬP TASK MỚI
     // ==========================================
     if (taskInput) {
         taskInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && taskInput.value.trim() !== "") {
-                // Tạo mảng mới nếu ngày đó chưa có
                 if (!tasksDB[currentSelectedDateStr]) {
                     tasksDB[currentSelectedDateStr] = [];
                 }
-                
-                // Push task vào ngày đang chọn
                 tasksDB[currentSelectedDateStr].push(taskInput.value);
                 localStorage.setItem('tasksDB', JSON.stringify(tasksDB));
                 
-                // Cập nhật giao diện
                 renderCustomList(tasksDB[currentSelectedDateStr], false);
                 taskInput.value = "";
                 
-                // Cập nhật lại lịch để hiện dấu chấm xanh
                 let parts = currentSelectedDateStr.split('-');
                 renderCalendar(parseInt(parts[1]) - 1, parseInt(parts[0]));
             }
@@ -275,7 +260,6 @@ document.addEventListener('DOMContentLoaded', () => {
             recheckBtn.classList.toggle('active', isViewingHistory);
             
             if (isViewingHistory) {
-                // Tính ngày hôm qua
                 let yesterday = new Date();
                 yesterday.setDate(yesterday.getDate() - 1);
                 let yesterdayStr = getSafeDateString(yesterday);
@@ -285,12 +269,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     listTitle.innerText = "Nhiệm vụ hôm qua:";
                     listTitle.style.color = "#a6adc8";
                 }
-                renderCustomList(tasksDB[yesterdayStr] || [], true); // readOnly = true
+                renderCustomList(tasksDB[yesterdayStr] || [], true);
                 if(document.querySelector('.input-group')) document.querySelector('.input-group').style.display = 'none';
             } else {
-                // Quay lại ngày đang chọn
                 if(listTitle && currentSelectedDateStr === todayLogicalDateStr) {
-                    listTitle.style.display = 'none'; // Ẩn nếu là hôm nay
+                    listTitle.style.display = 'none';
                 } else if (listTitle) {
                     listTitle.style.color = "#cdd6f4";
                 }
@@ -394,27 +377,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // 12. LỊCH (CALENDAR) (QWEN INTEGRATED)
+    // 12. LỊCH (CALENDAR)
     // ==========================================
     if (calendarPopup && calendarBtn && calendarGrid) {
-        
         let currentDate = new Date();
         let currMonth = currentDate.getMonth();
         let currYear = currentDate.getFullYear();
 
-        // 1. Sự kiện mở lịch
         calendarBtn.addEventListener('click', () => {
             calendarPopup.classList.toggle('active'); 
+            // Nếu mở lịch thì đóng pomodoro cho gọn
+            const pomodoroPopup = document.getElementById('pomodoro-popup');
+            if (pomodoroPopup) pomodoroPopup.classList.remove('active');
             renderCalendar(currMonth, currYear);
         });
 
         if (closeCalendarBtn) {
             closeCalendarBtn.addEventListener('click', () => calendarPopup.classList.remove('active'));
         }
-
-        window.addEventListener('click', (e) => {
-            if (e.target == calendarPopup) calendarPopup.classList.remove('active');
-        });
 
         if (prevMonthBtn) {
             prevMonthBtn.addEventListener('click', () => {
@@ -432,7 +412,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // 2. Hàm vẽ lịch
         function renderCalendar(month, year) {
             const monthNames = [
                 "Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6",
@@ -455,48 +434,157 @@ document.addEventListener('DOMContentLoaded', () => {
                 dayDiv.classList.add('calendar-day');
                 dayDiv.innerText = i;
 
-                // Tạo chuỗi ngày an toàn (Tránh múi giờ sai lệch)
                 let cellDateStr = getSafeDateString(new Date(year, month, i));
 
-                // A. Kiểm tra có task không (Dấu chấm xanh)
                 if (tasksDB[cellDateStr] && tasksDB[cellDateStr].length > 0) {
                     dayDiv.classList.add('has-task');
                 }
 
-                // B. Highlight ngày hôm nay (Màu hồng)
                 if (cellDateStr === todayLogicalDateStr) {
                     dayDiv.classList.add('current-day');
                 }
 
-                // C. Highlight ngày đang ĐƯỢC CHỌN (Viền xanh)
                 if (cellDateStr === currentSelectedDateStr) {
                     dayDiv.classList.add('selected-day');
                 }
 
-                // D. SỰ KIỆN CLICK VÀO NGÀY
                 dayDiv.addEventListener('click', () => {
                     currentSelectedDateStr = cellDateStr;
                     
-                    // Cập nhật tiêu đề hiển thị
                     if (listTitle) {
                         if (cellDateStr === todayLogicalDateStr) {
-                            listTitle.style.display = 'none'; // Trở về hôm nay thì ẩn
+                            listTitle.style.display = 'none'; 
                         } else {
                             let displayDate = `${String(i).padStart(2, '0')}/${String(month + 1).padStart(2, '0')}/${year}`;
                             listTitle.innerText = `Nhiệm vụ: ${displayDate}`;
                             listTitle.style.display = 'block';
-                            listTitle.style.color = "#fab387"; // Đổi màu cho dễ phân biệt
+                            listTitle.style.color = "#fab387";
                         }
                     }
 
-                    // Render list & đóng lịch
                     renderCustomList(tasksDB[currentSelectedDateStr] || [], false);
-                    renderCalendar(month, year); // Render lại để cập nhật viền select
+                    renderCalendar(month, year); 
                     calendarPopup.classList.remove('active');
                 });
 
                 calendarGrid.appendChild(dayDiv);
             }
+        }
+    }
+
+    // ==========================================
+    // 13. POMODORO TIMER
+    // ==========================================
+    const pomodoroPopup = document.getElementById('pomodoro-popup');
+    const alarmBtn = document.getElementById('alarm-btn');
+    const closePomodoro = document.getElementById('close-pomodoro');
+    const pomodoroTime = document.getElementById('pomodoro-time');
+    const startPauseBtn = document.getElementById('pomodoro-start-pause');
+    const resetBtn = document.getElementById('pomodoro-reset');
+    const modeButtons = document.querySelectorAll('.mode-btn');
+
+    if (pomodoroPopup && alarmBtn) {
+        let timerInterval = null;
+        let isRunning = false;
+        let secondsLeft = 25 * 60;
+        let currentMode = 'focus';
+
+        const modeDurations = {
+            'focus': 25 * 60,
+            'short-break': 5 * 60,
+            'long-break': 15 * 60
+        };
+
+        // Bật tắt bảng Pomodoro (Dùng class active thay vì hidden)
+        alarmBtn.addEventListener('click', () => {
+            pomodoroPopup.classList.toggle('active');
+            // Đóng lịch nếu đang mở cho đỡ rối
+            if(calendarPopup) calendarPopup.classList.remove('active');
+        });
+
+        closePomodoro.addEventListener('click', () => {
+            pomodoroPopup.classList.remove('active');
+            // Đã xóa logic dừng timer ở đây để nó chạy ngầm
+        });
+
+        // Click ngoài bảng để đóng
+        window.addEventListener('click', (e) => {
+            if (e.target == pomodoroPopup) pomodoroPopup.classList.remove('active');
+            if (e.target == calendarPopup) calendarPopup.classList.remove('active');
+        });
+
+        if (modeButtons) {
+            modeButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    modeButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentMode = btn.dataset.mode;
+                    secondsLeft = modeDurations[currentMode];
+                    updateTimerDisplay();
+                    
+                    // Đổi chế độ thì dừng đồng hồ luôn cho an toàn
+                    if (timerInterval) {
+                        clearInterval(timerInterval);
+                        timerInterval = null;
+                        isRunning = false;
+                        startPauseBtn.textContent = 'Start';
+                    }
+                });
+            });
+        }
+
+        if (startPauseBtn) {
+            startPauseBtn.addEventListener('click', () => {
+                if (!isRunning) {
+                    startTimer();
+                    startPauseBtn.textContent = 'Pause';
+                } else {
+                    pauseTimer();
+                    startPauseBtn.textContent = 'Start';
+                }
+            });
+        }
+
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                pauseTimer();
+                secondsLeft = modeDurations[currentMode];
+                updateTimerDisplay();
+                startPauseBtn.textContent = 'Start';
+            });
+        }
+
+        function startTimer() {
+            if (timerInterval) return;
+            isRunning = true;
+            timerInterval = setInterval(() => {
+                secondsLeft--;
+                updateTimerDisplay();
+                
+                if (secondsLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    isRunning = false;
+                    startPauseBtn.textContent = 'Start';
+                    
+                    // Cảnh báo hết giờ
+                    alert('⏰ HẾT GIỜ POMODORO!\nNghỉ ngơi tí đi ông giáo!');
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                isRunning = false;
+            }
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(secondsLeft / 60).toString().padStart(2, '0');
+            const seconds = (secondsLeft % 60).toString().padStart(2, '0');
+            if (pomodoroTime) pomodoroTime.textContent = `${minutes}:${seconds}`;
         }
     }
 });

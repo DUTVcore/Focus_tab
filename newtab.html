@@ -125,6 +125,26 @@
         </div>
     </div>
 
+    <div id="pomodoro-popup" class="glass-effect">
+        <div class="pomodoro-header">
+            <h2>Timer Pomodoro</h2>
+            <button id="close-pomodoro">×</button>
+        </div>
+        
+        <div class="pomodoro-mode-selection">
+            <button class="mode-btn active" data-mode="focus">Focus (25m)</button>
+            <button class="mode-btn" data-mode="short-break">Short Break (5m)</button>
+            <button class="mode-btn" data-mode="long-break">Long Break (15m)</button>
+        </div>
+        
+        <h1 id="pomodoro-time">25:00</h1>
+        
+        <div class="pomodoro-controls">
+            <button id="pomodoro-start-pause">Start</button>
+            <button id="pomodoro-reset">Reset</button>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
