@@ -1,7 +1,7 @@
 /**
  * PROJECT: FOCUS TAB EXTENSION
  * Dev: DUTVcore
- * Updated: Merged Calendar Logic & Fixed Event Listeners
+ * Updated: Future Tasks & LocalStorage DB Migration 
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -52,7 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (settingIcon) settingIcon.addEventListener('click', () => toggleModal(true));
     if (closeModal) closeModal.addEventListener('click', () => toggleModal(false));
 
-    // Chuyển Tab trong Modal
     if (tabBtns) {
         tabBtns.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -89,24 +88,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const savedZoom = localStorage.getItem('appZoom') || '1';
     const savedFont = localStorage.getItem('appFont') || "'Segoe UI', sans-serif";
 
-    function applySettings(zoom, font) {
-        document.body.style.fontFamily = font;
-        if (mainContainer) {
-            // Ưu tiên dùng transform scale để zoom mượt hơn
-            if (mainContainer.style.transform !== "none") {
-                 mainContainer.style.transform = `translate(-50%, -50%) scale(${zoom})`;
-            } else {
-                mainContainer.style.zoom = zoom;
-            }
-        }
-    }
-    
-    // Lưu ý: Do mainContainer có transform translate(-50%, -50%) trong CSS
-    // Nên khi scale JS cần giữ lại translate đó, hoặc dùng zoom CSS property (đơn giản hơn nhưng deprecated).
-    // Ở đây ta dùng CSS zoom property cho đơn giản code logic cũ của bác.
     if(mainContainer) mainContainer.style.zoom = savedZoom;
     document.body.style.fontFamily = savedFont;
-
 
     if (zoomRange) {
         zoomRange.value = savedZoom;
@@ -186,38 +169,65 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // 7. LOGIC TASK & CÚ ĐÊM
+    // 7. DATA MIGRATION & TASK STATE (QWEN INTEGRATED)
     // ==========================================
+    
+    // Helper để lấy ngày dạng YYYY-MM-DD tránh lỗi múi giờ
+    function getSafeDateString(dateObj) {
+        const y = dateObj.getFullYear();
+        const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const d = String(dateObj.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+
+    // Tính toán ngày hiện tại (có tính offset Cú Đêm)
     function getLogicalDateStr() {
         const resetHour = parseInt(localStorage.getItem('userResetHour')) || 0;
         const now = new Date();
         now.setHours(now.getHours() - resetHour);
-        return now.toDateString(); 
+        return getSafeDateString(now);
     }
 
-    const currentLogicDate = getLogicalDateStr();
-    const lastLogicDate = localStorage.getItem('lastSavedDate');
-    let todayTasks = JSON.parse(localStorage.getItem('myTasks')) || [];
+    const todayLogicalDateStr = getLogicalDateStr();
+    let currentSelectedDateStr = todayLogicalDateStr; // Mặc định là hôm nay
     
-    if (lastLogicDate !== currentLogicDate) {
-        localStorage.setItem('yesterdayTasks', JSON.stringify(todayTasks));
-        todayTasks = [];
-        localStorage.setItem('myTasks', JSON.stringify(todayTasks));
-        localStorage.setItem('lastSavedDate', currentLogicDate);
+    // Load Database từ LocalStorage
+    let tasksDB = JSON.parse(localStorage.getItem('tasksDB') || '{}');
+
+    // Migration logic: Chuyển dữ liệu cũ sang cấu trúc DB mới
+    if (localStorage.getItem('myTasks')) {
+        const oldTasks = JSON.parse(localStorage.getItem('myTasks'));
+        if (oldTasks.length > 0) {
+            tasksDB[todayLogicalDateStr] = oldTasks;
+            localStorage.setItem('tasksDB', JSON.stringify(tasksDB));
+        }
+        localStorage.removeItem('myTasks'); // Xóa mảng cũ
     }
 
+    // Render danh sách Task
     function renderCustomList(tasksArr, readOnly = false) {
         if (!taskList) return;
         taskList.innerHTML = "";
-        if (tasksArr.length === 0) {
+        
+        if (!tasksArr || tasksArr.length === 0) {
             taskList.innerHTML = "<li style='text-align:center; background:none; color: #a6adc8;'>Chưa có nhiệm vụ</li>";
             return;
         }
+
         tasksArr.forEach((task, index) => {
             const li = document.createElement('li');
             li.textContent = task;
             if (!readOnly) {
-                li.onclick = () => { todayTasks.splice(index, 1); saveAndRender(); };
+                // Sửa lỗi: Xóa task trên database mới
+                li.onclick = () => { 
+                    tasksDB[currentSelectedDateStr].splice(index, 1);
+                    localStorage.setItem('tasksDB', JSON.stringify(tasksDB));
+                    renderCustomList(tasksDB[currentSelectedDateStr], false);
+                    
+                    // Render lại lịch nếu đang mở để cập nhật dấu chấm
+                    let parts = currentSelectedDateStr.split('-');
+                    renderCalendar(parseInt(parts[1]) - 1, parseInt(parts[0])); 
+                };
             } else {
                 li.style.cursor = "default"; li.style.opacity = "0.7";
             }
@@ -225,24 +235,39 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function saveAndRender() {
-        localStorage.setItem('myTasks', JSON.stringify(todayTasks));
-        renderCustomList(todayTasks, false);
-    }
+    // Khởi chạy render lần đầu cho ngày hôm nay
+    if (listTitle) listTitle.style.display = 'none'; // Ẩn chữ "Hôm nay:" lúc đầu
+    renderCustomList(tasksDB[currentSelectedDateStr] || [], false);
 
-    if (taskList) renderCustomList(todayTasks, false);
-
+    // ==========================================
+    // 8. NHẬP TASK MỚI (QWEN INTEGRATED)
+    // ==========================================
     if (taskInput) {
         taskInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && taskInput.value.trim() !== "") {
-                todayTasks.push(taskInput.value);
-                saveAndRender();
+                // Tạo mảng mới nếu ngày đó chưa có
+                if (!tasksDB[currentSelectedDateStr]) {
+                    tasksDB[currentSelectedDateStr] = [];
+                }
+                
+                // Push task vào ngày đang chọn
+                tasksDB[currentSelectedDateStr].push(taskInput.value);
+                localStorage.setItem('tasksDB', JSON.stringify(tasksDB));
+                
+                // Cập nhật giao diện
+                renderCustomList(tasksDB[currentSelectedDateStr], false);
                 taskInput.value = "";
+                
+                // Cập nhật lại lịch để hiện dấu chấm xanh
+                let parts = currentSelectedDateStr.split('-');
+                renderCalendar(parseInt(parts[1]) - 1, parseInt(parts[0]));
             }
         });
     }
 
-    // Nút Recheck
+    // ==========================================
+    // 9. NÚT RECHECK (Xem lại hôm qua)
+    // ==========================================
     let isViewingHistory = false;
     if (recheckBtn) {
         recheckBtn.addEventListener('click', () => {
@@ -250,24 +275,33 @@ document.addEventListener('DOMContentLoaded', () => {
             recheckBtn.classList.toggle('active', isViewingHistory);
             
             if (isViewingHistory) {
+                // Tính ngày hôm qua
+                let yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                let yesterdayStr = getSafeDateString(yesterday);
+
                 if(listTitle) {
                     listTitle.style.display = 'block';
                     listTitle.innerText = "Nhiệm vụ hôm qua:";
                     listTitle.style.color = "#a6adc8";
                 }
-                const oldTasks = JSON.parse(localStorage.getItem('yesterdayTasks')) || [];
-                renderCustomList(oldTasks, true);
+                renderCustomList(tasksDB[yesterdayStr] || [], true); // readOnly = true
                 if(document.querySelector('.input-group')) document.querySelector('.input-group').style.display = 'none';
             } else {
-                if(listTitle) listTitle.style.display = 'none';
-                renderCustomList(todayTasks, false);
+                // Quay lại ngày đang chọn
+                if(listTitle && currentSelectedDateStr === todayLogicalDateStr) {
+                    listTitle.style.display = 'none'; // Ẩn nếu là hôm nay
+                } else if (listTitle) {
+                    listTitle.style.color = "#cdd6f4";
+                }
+                renderCustomList(tasksDB[currentSelectedDateStr] || [], false);
                 if(document.querySelector('.input-group')) document.querySelector('.input-group').style.display = 'flex';
             }
         });
     }
 
     // ==========================================
-    // 8. FOCUS MODE
+    // 10. FOCUS MODE
     // ==========================================
     if (typeof chrome !== 'undefined' && chrome.storage) {
         chrome.storage.local.get(['focusModeStatus', 'focusDomain'], (result) => {
@@ -314,15 +348,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // 9. KÉO THẢ (DRAG & DROP)
+    // 11. KÉO THẢ (DRAG & DROP)
     // ==========================================
     const savedPos = JSON.parse(localStorage.getItem('menuPosition'));
     if (savedPos && mainContainer) {
         mainContainer.style.top = savedPos.top;
         mainContainer.style.left = savedPos.left;
-        mainContainer.style.transform = "translate(0, 0)"; // Reset transform để tránh conflict vị trí tuyệt đối
-        // Reset lại zoom nếu có
-        if (savedZoom) mainContainer.style.zoom = savedZoom;
+        mainContainer.style.transform = "translate(0, 0)";
     }
 
     let isDragging = false;
@@ -338,7 +370,6 @@ document.addEventListener('DOMContentLoaded', () => {
             initialLeft = rect.left;
             initialTop = rect.top;
             
-            // Khi bắt đầu kéo, loại bỏ transform center để tính toán theo left/top tuyệt đối
             mainContainer.style.transform = "none";
             mainContainer.style.left = initialLeft + "px";
             mainContainer.style.top = initialTop + "px";
@@ -363,10 +394,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // 10. LỊCH (CALENDAR) - [FIXED]
+    // 12. LỊCH (CALENDAR) (QWEN INTEGRATED)
     // ==========================================
-    
-    // Kiểm tra xem có đủ HTML không (Tránh lỗi null)
     if (calendarPopup && calendarBtn && calendarGrid) {
         
         let currentDate = new Date();
@@ -375,25 +404,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 1. Sự kiện mở lịch
         calendarBtn.addEventListener('click', () => {
-            calendarPopup.classList.toggle('active'); // Thêm class active để hiện
+            calendarPopup.classList.toggle('active'); 
             renderCalendar(currMonth, currYear);
         });
 
-        // 2. Sự kiện đóng lịch
         if (closeCalendarBtn) {
-            closeCalendarBtn.addEventListener('click', () => {
-                calendarPopup.classList.remove('active');
-            });
+            closeCalendarBtn.addEventListener('click', () => calendarPopup.classList.remove('active'));
         }
 
-        // Đóng khi click ra ngoài
         window.addEventListener('click', (e) => {
-            if (e.target == calendarPopup) {
-                calendarPopup.classList.remove('active');
-            }
+            if (e.target == calendarPopup) calendarPopup.classList.remove('active');
         });
 
-        // 3. Sự kiện chuyển tháng
         if (prevMonthBtn) {
             prevMonthBtn.addEventListener('click', () => {
                 currMonth--;
@@ -410,7 +432,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // 4. Hàm vẽ lịch
+        // 2. Hàm vẽ lịch
         function renderCalendar(month, year) {
             const monthNames = [
                 "Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6",
@@ -423,33 +445,58 @@ document.addEventListener('DOMContentLoaded', () => {
             let firstDay = new Date(year, month, 1).getDay(); 
             let daysInMonth = new Date(year, month + 1, 0).getDate();
 
-            // Ô trống đầu tháng
             for (let i = 0; i < firstDay; i++) {
                 let emptyDiv = document.createElement('div');
                 calendarGrid.appendChild(emptyDiv);
             }
 
-            // Vẽ ngày
             for (let i = 1; i <= daysInMonth; i++) {
                 let dayDiv = document.createElement('div');
                 dayDiv.classList.add('calendar-day');
                 dayDiv.innerText = i;
 
-                let today = new Date();
-                if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                // Tạo chuỗi ngày an toàn (Tránh múi giờ sai lệch)
+                let cellDateStr = getSafeDateString(new Date(year, month, i));
+
+                // A. Kiểm tra có task không (Dấu chấm xanh)
+                if (tasksDB[cellDateStr] && tasksDB[cellDateStr].length > 0) {
+                    dayDiv.classList.add('has-task');
+                }
+
+                // B. Highlight ngày hôm nay (Màu hồng)
+                if (cellDateStr === todayLogicalDateStr) {
                     dayDiv.classList.add('current-day');
                 }
 
-                // Click vào ngày (Sau này sẽ làm tính năng add task ở đây)
-                dayDiv.addEventListener('click', () => {
-                    document.querySelectorAll('.calendar-day').forEach(el => el.classList.remove('selected-day'));
+                // C. Highlight ngày đang ĐƯỢC CHỌN (Viền xanh)
+                if (cellDateStr === currentSelectedDateStr) {
                     dayDiv.classList.add('selected-day');
+                }
+
+                // D. SỰ KIỆN CLICK VÀO NGÀY
+                dayDiv.addEventListener('click', () => {
+                    currentSelectedDateStr = cellDateStr;
+                    
+                    // Cập nhật tiêu đề hiển thị
+                    if (listTitle) {
+                        if (cellDateStr === todayLogicalDateStr) {
+                            listTitle.style.display = 'none'; // Trở về hôm nay thì ẩn
+                        } else {
+                            let displayDate = `${String(i).padStart(2, '0')}/${String(month + 1).padStart(2, '0')}/${year}`;
+                            listTitle.innerText = `Nhiệm vụ: ${displayDate}`;
+                            listTitle.style.display = 'block';
+                            listTitle.style.color = "#fab387"; // Đổi màu cho dễ phân biệt
+                        }
+                    }
+
+                    // Render list & đóng lịch
+                    renderCustomList(tasksDB[currentSelectedDateStr] || [], false);
+                    renderCalendar(month, year); // Render lại để cập nhật viền select
+                    calendarPopup.classList.remove('active');
                 });
 
                 calendarGrid.appendChild(dayDiv);
             }
         }
-    } else {
-        console.warn("Lịch: Không tìm thấy elements. Kiểm tra file HTML.");
     }
 });
